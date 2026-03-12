@@ -1,11 +1,10 @@
 package top.itsglobally.CircleFramework;
 
-import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
 
-    private static BasePlugin<?> instance;
+    private static BasePlugin<?> instance;;
 
     @Override
     public void onLoad() {
@@ -15,6 +14,7 @@ public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
+        VersionManager.init();
         this.enable();
     }
 
