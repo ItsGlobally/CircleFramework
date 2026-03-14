@@ -1,0 +1,29 @@
+package top.itsglobally.CircleFramework.event;
+
+import org.bukkit.event.Event;
+import org.bukkit.event.HandlerList;
+import top.itsglobally.CircleFramework.data.BasePlayer;
+
+public class CFPlayerCreateEvent<T extends BasePlayer> extends Event {
+
+    private static final HandlerList handlers = new HandlerList();
+
+    private final T player;
+
+    public CFPlayerCreateEvent(T player) {
+        this.player = player;
+    }
+
+    public T getPlayer() {
+        return player;
+    }
+
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
+}

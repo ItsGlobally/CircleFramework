@@ -13,4 +13,8 @@ public @interface CommandInfo {
     String[] aliases() default {};
 
     String permission() default "";
+
+    boolean tabCompleteReturnPlayerListWhenNull() default false;
+
+    String usage() default "";
 }

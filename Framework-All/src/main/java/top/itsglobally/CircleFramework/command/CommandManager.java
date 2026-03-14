@@ -59,24 +59,27 @@ public class CommandManager {
 
     private static void registerCommand(JavaPlugin plugin, CommandBase cmdInstance, CommandInfo info) throws Exception {
         CommandMap cm = getCommandMap();
+        if (info.usage().isEmpty()) cmdInstance.setUsage("/" + info.name());
+        else cmdInstance.setUsage(info.usage());
 
         Command cmd = new Command(info.name()) {
             @Override
             public boolean execute(CommandSender sender, String label, String[] args) {
+                cmdInstance.setSender(sender);
 
                 if (!info.permission().isEmpty() && !sender.hasPermission(info.permission())) {
-                    sender.sendMessage("§c你沒有足夠的權限!");
+                    cmdInstance.warn("你沒有足夠的權限(" + info.permission() + ")!");
                     return true;
                 }
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage("§c只有玩家才能運行!");
+                    cmdInstance.warn("只有玩家才能運行這個指令!");
                     return true;
                 }
 
                 try {
                     cmdInstance.playerExecute(player, label, args);
                 } catch (Exception e) {
-                    sender.sendMessage("§c執行指令時發生錯誤! 請將錯誤原因回報給我們: " + e.getMessage());
+                    cmdInstance.warn("執行指令時發生錯誤! 請將錯誤原因回報給我們: \" + e.getMessage()");
                     e.printStackTrace();
                 }
 
@@ -89,6 +92,11 @@ public class CommandManager {
                 List<String> raw = cmdInstance.onTabComplete(sender, this, alias, args);
 
                 if (raw == null || raw.isEmpty()) {
+                    if (info.tabCompleteReturnPlayerListWhenNull()) {
+                        List<String> players = new ArrayList<>();
+                        Bukkit.getOnlinePlayers().forEach(player -> players.add(player.getName()));
+                        return players;
+                    }
                     return Collections.emptyList();
                 }
                 int index = args.length - 1;

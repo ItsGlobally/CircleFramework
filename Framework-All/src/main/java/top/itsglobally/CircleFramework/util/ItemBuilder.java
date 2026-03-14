@@ -3,63 +3,170 @@ package top.itsglobally.CircleFramework.util;
 import dev.triumphteam.gui.components.GuiAction;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import top.itsglobally.CircleFramework.VersionManager;
+import top.itsglobally.CircleFramework.annotation.AutoListener;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.Consumer;
 
 public class ItemBuilder {
 
-    ItemStack item;
-    Material material;
+    private final ItemStack item;
+    private ItemMeta meta;
+    private final Material material;
+    private static final Map<ItemStack, ClickActions> registered = new HashMap<>();
+    private Consumer<Player> leftClick;
+    private Consumer<Player> rightClick;
+    private Consumer<Player> middleClick;
 
     public ItemBuilder(Material material) {
         this.material = material;
         this.item = new ItemStack(material);
+        this.meta = item.getItemMeta();
     }
 
-    public ItemBuilder setName(String name) {
-        ItemMeta meta = item.getItemMeta();
+    public ItemBuilder name(String name) {
         meta.setDisplayName(name);
         item.setItemMeta(meta);
         return this;
     }
 
-    public ItemBuilder setAmount(int amount) {
+    public ItemBuilder amount(int amount) {
         item.setAmount(amount);
         return this;
     }
 
-    public ItemBuilder setLore(String ...lore) {
+    public ItemBuilder lore(List<String> lore) {
+        meta.setLore(lore);
+        return this;
+    }
+
+    public ItemBuilder lore(String ...lore) {
         List<String> listLore = Arrays.asList(lore);
-        ItemMeta meta = item.getItemMeta();
         meta.setLore(listLore);
-        item.setItemMeta(meta);
         return this;
     }
 
     public ItemBuilder enchant(Enchantment enchantment, int level) {
-        ItemMeta meta = item.getItemMeta();
-        item.setItemMeta(meta);
+        meta.addEnchant(enchantment, level, true);
+        return this;
+    }
+
+    public ItemBuilder unenchant(Enchantment enchantment) {
+        meta.removeEnchant(enchantment);
         return this;
     }
 
     public ItemBuilder unbreakable(boolean unbreakable) {
-        ItemMeta meta = item.getItemMeta();
-        item.setItemMeta(VersionManager.getAdapter().setUnbreakable(meta, unbreakable));
+        meta = VersionManager.getAdapter().setUnbreakable(meta, unbreakable);
         return this;
     }
 
+    public ItemBuilder durability(int d) {
+        item.setDurability((short) d);
+        return this;
+    }
+
+    public ItemBuilder customModelMeta(int model) {
+        meta = VersionManager.getAdapter().setCustomModelMeta(meta, model);
+        return this;
+    }
+
+    public <P, C> ItemBuilder setPersistentDataContainer(NamespacedKey namespacedKey, PersistentDataType<P, C> persistentDataType, C id) {
+        meta = VersionManager.getAdapter().setPersistentDataContainer(meta, namespacedKey, persistentDataType, id);
+        return this;
+    }
+
+    public ItemBuilder onLeftClick(Consumer<Player> action) {
+        this.leftClick = action;
+        return this;
+    }
+
+    public ItemBuilder onRightClick(Consumer<Player> action) {
+        this.rightClick = action;
+        return this;
+    }
+
+    public ItemBuilder onMiddleClick(Consumer<Player> action) {
+        this.middleClick = action;
+        return this;
+    }
+
+    public GuiItem asGuiItem() {
+        return dev.triumphteam.gui.builder.item.ItemBuilder.from(build())
+                .asGuiItem();
+    }
+
     public GuiItem asGuiItem(GuiAction<InventoryClickEvent> action) {
-        return dev.triumphteam.gui.builder.item.ItemBuilder.from(item)
+        return dev.triumphteam.gui.builder.item.ItemBuilder.from(build())
                 .asGuiItem(action);
     }
 
     public ItemStack build() {
+        item.setItemMeta(meta);
+        if (this.leftClick != null || this.rightClick != null || this.middleClick != null) {
+            registered.put(item, new ClickActions(this.leftClick, this.rightClick, this.middleClick));
+        }
         return item;
+    }
+    @AutoListener
+    public class ItemListener implements Listener {
+        @EventHandler
+        public void onClick(PlayerInteractEvent e) {
+            ItemStack hand = e.getItem();
+            if (hand != null) {
+                for(Map.Entry<ItemStack, ClickActions> entry : ItemBuilder.registered.entrySet()) {
+                    if (ItemBuilder.this.isSimilar(hand, entry.getKey())) {
+                        ClickActions a = entry.getValue();
+                        switch (e.getAction()) {
+                            case LEFT_CLICK_AIR:
+                            case LEFT_CLICK_BLOCK:
+                                if (a.left != null) {
+                                    a.left.accept(e.getPlayer());
+                                }
+                                break;
+                            case RIGHT_CLICK_AIR:
+                            case RIGHT_CLICK_BLOCK:
+                                if (a.right != null) {
+                                    a.right.accept(e.getPlayer());
+                                }
+                            case PHYSICAL:
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+    private boolean isSimilar(ItemStack a, ItemStack b) {
+        if (a != null && b != null) {
+            if (a.getType() != b.getType()) {
+                return false;
+            } else {
+                ItemMeta am = a.getItemMeta();
+                ItemMeta bm = b.getItemMeta();
+                if (am != null && bm != null) {
+                    return Objects.equals(am.getDisplayName(), bm.getDisplayName()) && Objects.equals(am.getLore(), bm.getLore());
+                } else {
+                    return false;
+                }
+            }
+        } else {
+            return false;
+        }
+    }
+
+    private static record ClickActions(Consumer<Player> left, Consumer<Player> right, Consumer<Player> middle) {
     }
 }

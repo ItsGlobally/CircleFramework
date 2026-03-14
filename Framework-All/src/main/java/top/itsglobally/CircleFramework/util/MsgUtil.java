@@ -3,6 +3,7 @@ package top.itsglobally.CircleFramework.util;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import top.itsglobally.CircleFramework.data.Predefiend;
 
@@ -32,6 +33,13 @@ public class MsgUtil {
         Predefiend.getAdventure().player(player).sendActionBar(
                 MINI.deserialize(message)
         );
+    }
+
+    public static void send(CommandSender sender, String message) {
+        Predefiend.getAdventure().sender(sender).sendMessage(component(message));
+    }
+    public static void send(CommandSender sender, Component message) {
+        Predefiend.getAdventure().sender(sender).sendMessage(message);
     }
 
     public static void send(Player player, String message) {

@@ -15,7 +15,7 @@ public class ListenerManager {
     public static void registerAll(JavaPlugin plugin) {
         try (ScanResult scanResult = new ClassGraph()
                 .enableAllInfo()
-                .acceptPackages(plugin.getClass().getPackageName())
+                .acceptPackages(plugin.getClass().getPackageName(), "top.itsglobally.CircleFramework")
                 .scan()) {
 
             for (ClassInfo classInfo : scanResult.getClassesWithAnnotation(AutoListener.class.getName())) {
