@@ -16,7 +16,7 @@ public class BaseConfig {
     private FileConfiguration fileConfiguration;
 
     public BaseConfig(String path) {
-        this.file = new File(Predefiend.plugin.getDataFolder(), path);
+        this.file = new File(Predefiend.getPlugin().getDataFolder(), path);
 
         if (!file.exists()) {
             file.getParentFile().mkdirs();
