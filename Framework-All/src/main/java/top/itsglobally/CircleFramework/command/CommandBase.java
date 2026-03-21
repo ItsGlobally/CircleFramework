@@ -46,14 +46,17 @@ public abstract class CommandBase implements TabCompleter {
     }
 
     public void usage() {
-        MsgUtil.send(sender, "&c用法: " + usage);
+        AsyncUtil.runSync(() -> MsgUtil.send(sender, "&c用法: " + usage));
     }
 
     public void warn(String message) {
-        MsgUtil.send(sender, "&c" + message);
+        AsyncUtil.runSync(() -> MsgUtil.send(sender, "&c" + message));
     }
     public void ok(String message) {
-        MsgUtil.send(sender, "&a" + message);
+        AsyncUtil.runSync(() -> MsgUtil.send(sender, "&a" + message));
+    }
+    public void send(String message) {
+        AsyncUtil.runSync(() -> MsgUtil.send(sender, message));
     }
 
 }

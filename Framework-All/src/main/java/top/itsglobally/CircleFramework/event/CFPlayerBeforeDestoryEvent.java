@@ -5,14 +5,18 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import top.itsglobally.CircleFramework.data.BasePlayer;
 
-@Getter
-public class CFPlayerBeforeDestoryEvent extends Event {
+public class CFPlayerBeforeDestoryEvent<T extends BasePlayer> extends Event {
+
     private static final HandlerList handlers = new HandlerList();
 
-    private final BasePlayer player;
+    private final T player;
 
-    public CFPlayerBeforeDestoryEvent(BasePlayer player) {
+    public CFPlayerBeforeDestoryEvent(T player) {
         this.player = player;
+    }
+
+    public T getPlayer() {
+        return player;
     }
 
     @Override

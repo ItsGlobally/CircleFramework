@@ -28,10 +28,10 @@ public class ListenerManager {
 
                     Listener listenerInstance = (Listener) clazz.getDeclaredConstructor().newInstance();
                     Bukkit.getPluginManager().registerEvents(listenerInstance, plugin);
-
+                    plugin.getLogger().info("已註冊事件" + clazz.getName());
 
                 } catch (Exception e) {
-                    plugin.getLogger().warning("Failed to register listener: " + classInfo.getName());
+                    plugin.getLogger().warning("無法註冊事件: " + classInfo.getName());
                     e.printStackTrace();
                 }
             }

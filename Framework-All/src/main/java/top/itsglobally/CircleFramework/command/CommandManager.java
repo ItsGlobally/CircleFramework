@@ -79,7 +79,7 @@ public class CommandManager {
                 try {
                     cmdInstance.playerExecute(player, label, args);
                 } catch (Exception e) {
-                    cmdInstance.warn("執行指令時發生錯誤! 請將錯誤原因回報給我們: \" + e.getMessage()");
+                    cmdInstance.warn("執行指令時發生錯誤! 請將錯誤原因回報給我們: " + e.getMessage());
                     e.printStackTrace();
                 }
 
@@ -95,9 +95,8 @@ public class CommandManager {
                     if (info.tabCompleteReturnPlayerListWhenNull()) {
                         List<String> players = new ArrayList<>();
                         Bukkit.getOnlinePlayers().forEach(player -> players.add(player.getName()));
-                        return players;
-                    }
-                    return Collections.emptyList();
+                        raw = players;
+                    } else return Collections.emptyList();
                 }
                 int index = args.length - 1;
 
@@ -118,6 +117,7 @@ public class CommandManager {
 
         cm.register(plugin.getName().toLowerCase(), cmd);
         registeredCommands.put(cmdInstance, cmd);
+        plugin.getLogger().info("已註冊指令" + cmd.getName());
     }
 
     public static void unregisterAll() {

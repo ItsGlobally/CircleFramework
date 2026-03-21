@@ -120,13 +120,13 @@ public class ItemBuilder {
         return item;
     }
     @AutoListener
-    public class ItemListener implements Listener {
+    public static class ItemListener implements Listener {
         @EventHandler
         public void onClick(PlayerInteractEvent e) {
             ItemStack hand = e.getItem();
             if (hand != null) {
-                for(Map.Entry<ItemStack, ClickActions> entry : ItemBuilder.registered.entrySet()) {
-                    if (ItemBuilder.this.isSimilar(hand, entry.getKey())) {
+                for (Map.Entry<ItemStack, ClickActions> entry : ItemBuilder.registered.entrySet()) {
+                    if (ItemBuilder.isSimilar(hand, entry.getKey())) {
                         ClickActions a = entry.getValue();
                         switch (e.getAction()) {
                             case LEFT_CLICK_AIR:
@@ -144,12 +144,11 @@ public class ItemBuilder {
                         }
                     }
                 }
-
             }
         }
     }
 
-    private boolean isSimilar(ItemStack a, ItemStack b) {
+    public static boolean isSimilar(ItemStack a, ItemStack b) {
         if (a != null && b != null) {
             if (a.getType() != b.getType()) {
                 return false;
@@ -167,6 +166,6 @@ public class ItemBuilder {
         }
     }
 
-    private static record ClickActions(Consumer<Player> left, Consumer<Player> right, Consumer<Player> middle) {
+    private record ClickActions(Consumer<Player> left, Consumer<Player> right, Consumer<Player> middle) {
     }
 }
