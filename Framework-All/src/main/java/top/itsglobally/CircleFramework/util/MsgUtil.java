@@ -3,6 +3,7 @@ package top.itsglobally.CircleFramework.util;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import top.itsglobally.CircleFramework.data.Predefiend;
@@ -15,6 +16,10 @@ public class MsgUtil {
         }
 
         return LEGACY.deserialize(message);
+    }
+
+    public static String colorLegacy(String message) {
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 
 

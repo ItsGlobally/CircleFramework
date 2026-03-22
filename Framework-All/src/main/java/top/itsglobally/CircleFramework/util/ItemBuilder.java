@@ -10,6 +10,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -25,9 +26,9 @@ public class ItemBuilder {
     private ItemMeta meta;
     private final Material material;
     private static final Map<ItemStack, ClickActions> registered = new HashMap<>();
-    private Consumer<Player> leftClick;
-    private Consumer<Player> rightClick;
-    private Consumer<Player> middleClick;
+    private Consumer<ClickContext> leftClick;
+    private Consumer<ClickContext> rightClick;
+    private Consumer<ClickContext> middleClick;
 
     public ItemBuilder(Material material) {
         this.material = material;
@@ -36,7 +37,7 @@ public class ItemBuilder {
     }
 
     public ItemBuilder name(String name) {
-        meta.setDisplayName(name);
+        meta.setDisplayName(MsgUtil.colorLegacy(name));
         item.setItemMeta(meta);
         return this;
     }
@@ -47,13 +48,20 @@ public class ItemBuilder {
     }
 
     public ItemBuilder lore(List<String> lore) {
-        meta.setLore(lore);
+        List<String> loreCopy = new ArrayList<>();
+        for (String s : lore) {
+            loreCopy.add(MsgUtil.colorLegacy(s));
+        }
+        meta.setLore(loreCopy);
         return this;
     }
 
     public ItemBuilder lore(String ...lore) {
-        List<String> listLore = Arrays.asList(lore);
-        meta.setLore(listLore);
+        List<String> loreCopy = new ArrayList<>();
+        for (String s : lore) {
+            loreCopy.add(MsgUtil.colorLegacy(s));
+        }
+        meta.setLore(loreCopy);
         return this;
     }
 
@@ -87,17 +95,17 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder onLeftClick(Consumer<Player> action) {
+    public ItemBuilder onLeftClick(Consumer<ClickContext> action) {
         this.leftClick = action;
         return this;
     }
 
-    public ItemBuilder onRightClick(Consumer<Player> action) {
+    public ItemBuilder onRightClick(Consumer<ClickContext> action) {
         this.rightClick = action;
         return this;
     }
 
-    public ItemBuilder onMiddleClick(Consumer<Player> action) {
+    public ItemBuilder onMiddleClick(Consumer<ClickContext> action) {
         this.middleClick = action;
         return this;
     }
@@ -119,6 +127,32 @@ public class ItemBuilder {
         }
         return item;
     }
+
+    public static class ClickContext {
+
+        private final Player player;
+        private final ItemStack item;
+        private final PlayerInteractEvent event;
+
+        public ClickContext(Player player, ItemStack item, PlayerInteractEvent event) {
+            this.player = player;
+            this.item = item;
+            this.event = event;
+        }
+
+        public Player getPlayer() {
+            return player;
+        }
+
+        public ItemStack getItem() {
+            return item;
+        }
+
+        public PlayerInteractEvent getEvent() {
+            return event;
+        }
+    }
+
     @AutoListener
     public static class ItemListener implements Listener {
         @EventHandler
@@ -132,15 +166,17 @@ public class ItemBuilder {
                             case LEFT_CLICK_AIR:
                             case LEFT_CLICK_BLOCK:
                                 if (a.left != null) {
-                                    a.left.accept(e.getPlayer());
+                                    a.left.accept(new ClickContext(e.getPlayer(), hand, e));
                                 }
                                 break;
                             case RIGHT_CLICK_AIR:
                             case RIGHT_CLICK_BLOCK:
                                 if (a.right != null) {
-                                    a.right.accept(e.getPlayer());
+                                    a.right.accept(new ClickContext(e.getPlayer(), hand, e));
                                 }
+                                break;
                             case PHYSICAL:
+                                break;
                         }
                     }
                 }
@@ -166,6 +202,6 @@ public class ItemBuilder {
         }
     }
 
-    private record ClickActions(Consumer<Player> left, Consumer<Player> right, Consumer<Player> middle) {
+    private record ClickActions(Consumer<ClickContext> left, Consumer<ClickContext> right, Consumer<ClickContext> middle) {
     }
 }

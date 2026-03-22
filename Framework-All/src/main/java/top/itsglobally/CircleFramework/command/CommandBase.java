@@ -50,10 +50,10 @@ public abstract class CommandBase implements TabCompleter {
     }
 
     public void warn(String message) {
-        AsyncUtil.runSync(() -> MsgUtil.send(sender, "&c" + message));
+        AsyncUtil.runSync(() -> MsgUtil.send(sender, "&7" + message));
     }
     public void ok(String message) {
-        AsyncUtil.runSync(() -> MsgUtil.send(sender, "&a" + message));
+        AsyncUtil.runSync(() -> MsgUtil.send(sender, "&b" + message));
     }
     public void send(String message) {
         AsyncUtil.runSync(() -> MsgUtil.send(sender, message));

@@ -2,6 +2,7 @@ package top.itsglobally.CircleFramework;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.grinderwolf.swm.api.SlimePlugin;
 import lombok.Getter;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.milkbowl.vault.economy.Economy;
@@ -23,6 +24,8 @@ public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
     protected static Economy econ;
     @Getter
     private static Gson gson;
+    @Getter
+    private static SlimePlugin slimePlugin;
 
     @Override
     public void onLoad() {
@@ -57,6 +60,10 @@ public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
         if (getDescription().getDepend().contains("Vault")) {
             RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
             if (rsp != null) econ = rsp.getProvider();
+        }
+        if (getDescription().getDepend().contains("SlimeWorldManager")) {
+            SlimePlugin sp = (SlimePlugin) getServer().getPluginManager().getPlugin("SlimeWorldManager");
+            if (sp != null) slimePlugin = sp;
         }
         getLogger().info("CircleFramework初始化已完成! 正在初始化插件...");
         this.enable();
