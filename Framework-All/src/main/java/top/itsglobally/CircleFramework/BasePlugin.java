@@ -39,7 +39,9 @@ public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
         VersionManager.init();
         adventure = BukkitAudiences.create(this);
         gson = new GsonBuilder().create();
+        getLogger().info("正在註冊指令...");
         CommandManager.registerAll(this);
+        getLogger().info("正在註冊世界...");
         ListenerManager.registerAll(this);
         getLogger().info("----------------------------------------------");
         getLogger().info("CircleFramework - v1.0 by ItsGlobally");
@@ -58,21 +60,23 @@ public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
             getLogger().warning("缺少: " + sb);
         }
         if (getDescription().getDepend().contains("Vault")) {
+            getLogger().info("依賴項中找到Vault! 正在初始化經濟支援...");
             RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
             if (rsp != null) econ = rsp.getProvider();
+            else getLogger().warning("找不到經濟支援提供者! 經濟支援將無法工作!");
         }
         if (getDescription().getDepend().contains("SlimeWorldManager")) {
-            SlimePlugin sp = (SlimePlugin) getServer().getPluginManager().getPlugin("SlimeWorldManager");
-            if (sp != null) slimePlugin = sp;
+            getLogger().info("依賴項中找到SlimeWorldManager! 正在初始化Slime世界管理支援...");
+            slimePlugin = (SlimePlugin) getServer().getPluginManager().getPlugin("SlimeWorldManager");
         }
-        getLogger().info("CircleFramework初始化已完成! 正在初始化插件...");
+        getLogger().info("CircleFramework初始化已完成!");
         this.enable();
+        getLogger().info("插件已啟用!");
     }
 
     @Override
     public void onDisable() {
         this.disable();
-
     }
     protected void load() {}
 
