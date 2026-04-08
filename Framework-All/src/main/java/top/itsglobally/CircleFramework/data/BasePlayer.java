@@ -12,6 +12,16 @@ public abstract class BasePlayer {
     @Getter
     public static Map<UUID, BasePlayer> players = new HashMap<>();
     private static Function<Player, ? extends BasePlayer> provider;
+    @Getter
+    private final Player player;
+
+    protected BasePlayer(Player player) {
+        this.player = player;
+        players.put(player.getUniqueId(), this);
+    }
+    /*
+    BasePlayer.register(BasePlayer::new)
+     */
     public static void register(Function<Player, ? extends BasePlayer> factory) {
         provider = factory;
     }
@@ -33,14 +43,6 @@ public abstract class BasePlayer {
     @SuppressWarnings("unchecked")
     public static <T extends BasePlayer> T get(Player player) {
         return (T) players.get(player.getUniqueId());
-    }
-
-    @Getter
-    private final Player player;
-
-    protected BasePlayer(Player player) {
-        this.player = player;
-        players.put(player.getUniqueId(), this);
     }
 
     public String getName() {

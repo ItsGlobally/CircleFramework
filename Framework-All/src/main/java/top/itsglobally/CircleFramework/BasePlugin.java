@@ -17,15 +17,20 @@ import java.util.List;
 
 public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
 
+    @Getter
+    protected static Economy econ;
     private static BasePlugin<?> instance;
     @Getter
     private static BukkitAudiences adventure;
     @Getter
-    protected static Economy econ;
-    @Getter
     private static Gson gson;
     @Getter
     private static SlimePlugin slimePlugin;
+
+    @SuppressWarnings("unchecked")
+    public static <T extends BasePlugin<?>> T getInstance() {
+        return (T) instance;
+    }
 
     @Override
     public void onLoad() {
@@ -56,7 +61,7 @@ public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
             for (String depend : missingDepends) {
                 sb.append(depend).append(", ");
             }
-            sb.setLength(sb.length() -2);
+            sb.setLength(sb.length() - 2);
             getLogger().warning("缺少: " + sb);
         }
         if (getDescription().getDepend().contains("Vault")) {
@@ -78,16 +83,13 @@ public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
     public void onDisable() {
         this.disable();
     }
-    protected void load() {}
+
+    protected void load() {
+    }
 
     protected abstract void enable();
 
     protected abstract void disable();
-
-    @SuppressWarnings("unchecked")
-    public static <T extends BasePlugin<?>> T getInstance() {
-        return (T) instance;
-    }
 
     public void disablePlugin() {
         this.getPluginLoader().disablePlugin(this);

@@ -1,0 +1,31 @@
+package top.itsglobally.CircleFramework.util;
+
+import top.itsglobally.CircleFramework.data.YamlFile;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
+public class FileUtil  {
+    public static Map<String, YamlFile> loadYamlFolder(String folder) {
+        Map<String, YamlFile> map = new HashMap<>();
+        File dir = new File(folder);
+
+        if (!dir.exists()) {
+            dir.mkdirs();
+            return map;
+        }
+
+        for (File file : Objects.requireNonNull(dir.listFiles())) {
+            if (!file.getName().endsWith(".yml")) continue;
+
+            String name = file.getName().replace(".yml", "");
+            YamlFile yml = new YamlFile(folder + "/" + file.getName());
+
+            map.put(name.toLowerCase(), yml);
+        }
+
+        return map;
+    }
+}

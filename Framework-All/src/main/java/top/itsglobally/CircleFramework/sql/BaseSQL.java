@@ -1,7 +1,5 @@
 package top.itsglobally.CircleFramework.sql;
 
-import top.itsglobally.CircleFramework.BasePlugin;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

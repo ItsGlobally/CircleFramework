@@ -3,7 +3,6 @@ package top.itsglobally.CircleFramework;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import top.itsglobally.CircleFramework.core.VersionAdapter;
-
 import top.itsglobally.CircleFramework.data.Predefiend;
 import top.itsglobally.CircleFramework.versions.v1_21.Adapter_v1_21;
 import top.itsglobally.CircleFramework.versions.v1_8.Adapter_v1_8;

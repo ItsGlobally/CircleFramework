@@ -1,21 +1,24 @@
-package top.itsglobally.CircleFramework.config;
+package top.itsglobally.CircleFramework.data;
 
 import lombok.Getter;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import top.itsglobally.CircleFramework.data.Predefiend;
 
 import java.io.File;
 import java.io.IOException;
 
 @Getter
-public class BaseConfig {
+public class YamlFile {
 
     private final File file;
-    private FileConfiguration fileConfiguration;
-
-    public BaseConfig(String path) {
-        this.file = new File(Predefiend.getPlugin().getDataFolder(), path);
+    private FileConfiguration config;
+    /*
+    YamlFile(String path)
+    Full path of the file.
+    If the file is in plugin data folder use YamlFile(plugin.getDataFolder() + "/name.yml")
+     */
+    public YamlFile(String path) {
+        this.file = new File(path);
 
         if (!file.exists()) {
             file.getParentFile().mkdirs();
@@ -31,13 +34,13 @@ public class BaseConfig {
 
     public void save() {
         try {
-            fileConfiguration.save(file);
+            config.save(file);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void reload() {
-        this.fileConfiguration = YamlConfiguration.loadConfiguration(file);
+        this.config = YamlConfiguration.loadConfiguration(file);
     }
 }

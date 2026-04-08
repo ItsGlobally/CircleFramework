@@ -1,6 +1,5 @@
 package top.itsglobally.CircleFramework.event;
 
-import lombok.Getter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import top.itsglobally.CircleFramework.data.BasePlayer;
@@ -15,16 +14,16 @@ public class CFPlayerBeforeDestoryEvent<T extends BasePlayer> extends Event {
         this.player = player;
     }
 
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
+
     public T getPlayer() {
         return player;
     }
 
     @Override
     public HandlerList getHandlers() {
-        return handlers;
-    }
-
-    public static HandlerList getHandlerList() {
         return handlers;
     }
 }

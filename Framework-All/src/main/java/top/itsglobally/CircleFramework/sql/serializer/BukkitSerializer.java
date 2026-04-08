@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
+import top.itsglobally.CircleFramework.data.WorldlessLocation;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,6 +27,26 @@ public class BukkitSerializer {
     public static Location deserializeLocation(JsonObject obj) {
         return new Location(
                 Bukkit.getWorld(obj.get("world").getAsString()),
+                obj.get("x").getAsDouble(),
+                obj.get("y").getAsDouble(),
+                obj.get("z").getAsDouble(),
+                obj.get("yaw").getAsFloat(),
+                obj.get("pitch").getAsFloat()
+        );
+    }
+
+    public static JsonObject serializeWorldlessLocation(WorldlessLocation loc) {
+        JsonObject obj = new JsonObject();
+        obj.addProperty("x", loc.getX());
+        obj.addProperty("y", loc.getY());
+        obj.addProperty("z", loc.getZ());
+        obj.addProperty("yaw", loc.getYaw());
+        obj.addProperty("pitch", loc.getPitch());
+        return obj;
+    }
+
+    public static WorldlessLocation deserializeWorldlessLocation(JsonObject obj) {
+        return new WorldlessLocation(
                 obj.get("x").getAsDouble(),
                 obj.get("y").getAsDouble(),
                 obj.get("z").getAsDouble(),

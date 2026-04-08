@@ -7,6 +7,7 @@ public class Predefiend {
     public static BasePlugin<?> getPlugin() {
         return BasePlugin.getInstance();
     }
+
     public static BukkitAudiences getAdventure() {
         return BasePlugin.getAdventure();
     }

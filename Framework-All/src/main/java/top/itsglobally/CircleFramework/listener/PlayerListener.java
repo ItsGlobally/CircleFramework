@@ -5,7 +5,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import top.itsglobally.CircleFramework.BasePlugin;
 import top.itsglobally.CircleFramework.annotation.AutoListener;
 import top.itsglobally.CircleFramework.data.BasePlayer;
 import top.itsglobally.CircleFramework.event.CFPlayerBeforeDestoryEvent;

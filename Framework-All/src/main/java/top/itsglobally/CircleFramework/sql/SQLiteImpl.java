@@ -1,42 +1,63 @@
 package top.itsglobally.CircleFramework.sql;
 
-import com.zaxxer.hikari.HikariConfig;
-
 import java.io.File;
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
-public class SQLiteImpl extends HikariSQL {
+public class SQLiteImpl extends BaseSQL {
 
     private final File file;
+    private String url;
+    private boolean connected = false;
 
     public SQLiteImpl(File file) {
         this.file = file;
+
         if (!file.exists()) {
             try {
                 file.getParentFile().mkdirs();
                 file.createNewFile();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
     @Override
-    protected HikariConfig createConfig() {
-        HikariConfig config = new HikariConfig();
+    public void connect() {
+        this.url = "jdbc:sqlite:" + file.getAbsolutePath();
 
-        config.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
+        try {
+            // 測試連線
+            try (Connection conn = DriverManager.getConnection(url)) {
+                connected = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            connected = false;
+        }
+    }
 
-        config.setMaximumPoolSize(10);
-        config.setMinimumIdle(2);
-        config.setIdleTimeout(300000);
-        config.setMaxLifetime(1800000);
-        config.setConnectionTimeout(10000);
+    @Override
+    public void disconnect() {
+        connected = false;
+    }
 
-        config.addDataSourceProperty("cachePrepStmts", "true");
-        config.addDataSourceProperty("prepStmtCacheSize", "250");
-        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+    @Override
+    public boolean isConnected() {
+        return connected;
+    }
 
-        return config;
+    @Override
+    public Connection getConnection() {
+        try {
+            if (!connected) {
+                throw new SQLException("Database not connected");
+            }
+            return DriverManager.getConnection(url);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
