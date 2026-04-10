@@ -48,6 +48,6 @@ public class SWMUtil {
     }
 
     public static void cloneWorld(SlimeLoader slimeLoader, String name, String newName, SlimePropertyMap slimePropertyMap) throws CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException, IOException, WorldAlreadyExistsException {
-        cloneWorld(slimeLoader, name, newName, true, slimePropertyMap);
+        cloneWorld(slimeLoader, name, newName, false, slimePropertyMap);
     }
 }
