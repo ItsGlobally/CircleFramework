@@ -42,12 +42,8 @@ public class SWMUtil {
         slimeLoader.deleteWorld(name);
     }
 
-    public static void cloneWorld(SlimeLoader slimeLoader, String name, String newName, boolean readonly, SlimePropertyMap slimePropertyMap) throws CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException, IOException, WorldAlreadyExistsException {
-        SlimeWorld slimeWorld = BasePlugin.getSlimePlugin().loadWorld(slimeLoader, name, true, slimePropertyMap);
-        SLIME_PLUGIN.generateWorld(slimeWorld.clone(newName, slimeLoader, readonly));
-    }
-
     public static void cloneWorld(SlimeLoader slimeLoader, String name, String newName, SlimePropertyMap slimePropertyMap) throws CorruptedWorldException, NewerFormatException, WorldInUseException, UnknownWorldException, IOException, WorldAlreadyExistsException {
-        cloneWorld(slimeLoader, name, newName, false, slimePropertyMap);
+        SlimeWorld slimeWorld = BasePlugin.getSlimePlugin().loadWorld(slimeLoader, name, true, slimePropertyMap);
+        SLIME_PLUGIN.generateWorld(slimeWorld.clone(newName, slimeLoader, true));
     }
 }

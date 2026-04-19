@@ -72,6 +72,6 @@ public class MsgUtil {
         return Component.text()
                 .append(component(msg))
                 .build()
-                .toString();
+                .content();
     }
 }

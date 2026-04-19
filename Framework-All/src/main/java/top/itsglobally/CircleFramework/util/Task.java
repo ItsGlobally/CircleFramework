@@ -95,7 +95,7 @@ public class Task {
         if (!manualCancel && onFinish != null) {
             onFinish.run();
         } else {
-            onCancel.run();
+            if (onCancel != null) onCancel.run();
         }
 
         onFinish = null;
