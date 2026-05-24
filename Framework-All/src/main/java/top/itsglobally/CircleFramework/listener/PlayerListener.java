@@ -16,12 +16,14 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         BasePlayer basePlayer = BasePlayer.create(event.getPlayer());
+        if (basePlayer == null) return;
         Bukkit.getPluginManager().callEvent(new CFPlayerCreateEvent<>(basePlayer));
     }
 
     @EventHandler
     public void onLeave(PlayerQuitEvent event) {
         BasePlayer basePlayer = BasePlayer.get(event.getPlayer());
+        if (basePlayer == null) return;
         Bukkit.getPluginManager().callEvent(new CFPlayerBeforeDestoryEvent<>(basePlayer));
         BasePlayer.remove(event.getPlayer().getUniqueId());
     }

@@ -30,7 +30,7 @@ public abstract class BasePlayer {
     public static <T extends BasePlayer> T create(Player player) {
 
         if (provider == null) {
-            throw new IllegalStateException("Player provider is not registered!");
+            return null;
         }
 
         return (T) provider.apply(player);

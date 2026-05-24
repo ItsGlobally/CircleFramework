@@ -2,6 +2,7 @@ package top.itsglobally.CircleFramework.util;
 
 import dev.triumphteam.gui.components.GuiAction;
 import dev.triumphteam.gui.guis.GuiItem;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -11,19 +12,22 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import top.itsglobally.CircleFramework.VersionManager;
 import top.itsglobally.CircleFramework.annotation.AutoListener;
+import top.itsglobally.CircleFramework.data.Predefiend;
 
 import java.util.*;
 import java.util.function.Consumer;
 
 public class ItemBuilder {
 
-    private static final Map<ItemStack, ClickActions> registered = new HashMap<>();
+    private static final Map<String, ClickActions> registered = new HashMap<>();
     private final ItemStack item;
     private final Material material;
+    private final String clickId = UUID.randomUUID().toString();
     private ItemMeta meta;
     private Consumer<ClickContext> leftClick;
     private Consumer<ClickContext> rightClick;
@@ -35,23 +39,13 @@ public class ItemBuilder {
         this.meta = item.getItemMeta();
     }
 
-    public static boolean isSimilar(ItemStack a, ItemStack b) {
-        if (a != null && b != null) {
-            if (a.getType() != b.getType()) {
-                return false;
-            } else {
-                ItemMeta am = a.getItemMeta();
-                ItemMeta bm = b.getItemMeta();
-                if (am != null && bm != null) {
-                    return Objects.equals(am.getDisplayName(), bm.getDisplayName()) && Objects.equals(am.getLore(), bm.getLore());
-                } else {
-                    return false;
-                }
-            }
-        } else {
-            return false;
-        }
+    public ItemBuilder(Material material, DyeColor color) {
+        this.material = resolveColoredMaterial(material, color);
+        this.item = new ItemStack(this.material);
+        applyLegacyColor(material, color, this.item);
+        this.meta = item.getItemMeta();
     }
+
 
     public ItemBuilder name(String name) {
         meta.setDisplayName(MsgUtil.colorLegacy(name));
@@ -92,6 +86,12 @@ public class ItemBuilder {
         return this;
     }
 
+    public ItemBuilder addFakeEnchantment() {
+        meta.addEnchant(Enchantment.DURABILITY, 1, true);
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        return this;
+    }
+
     public ItemBuilder unbreakable(boolean unbreakable) {
         meta = VersionManager.getAdapter().setUnbreakable(meta, unbreakable);
         return this;
@@ -127,6 +127,29 @@ public class ItemBuilder {
         return this;
     }
 
+    private static Material resolveColoredMaterial(Material base, DyeColor color) {
+        String coloredName = color.name() + "_" + base.name();
+        Material colored = Material.matchMaterial(coloredName);
+        return colored != null ? colored : base;
+    }
+
+    private static void applyLegacyColor(Material base, DyeColor color, ItemStack item) {
+        String name = base.name();
+        if (name.equals("WOOL")
+                || name.equals("STAINED_GLASS")
+                || name.equals("STAINED_GLASS_PANE")
+                || name.equals("CARPET")
+                || name.equals("STAINED_CLAY")
+                || name.equals("CONCRETE_POWDER")
+                || name.equals("INK_SACK")) {
+            item.setDurability(color.getWoolData());
+        }
+    }
+
+    private static NamespacedKey getClickKey() {
+        return new NamespacedKey(Predefiend.getPlugin(), "itembuilder_click_id");
+    }
+
     public GuiItem asGuiItem() {
         return dev.triumphteam.gui.builder.item.ItemBuilder.from(build())
                 .asGuiItem();
@@ -138,9 +161,12 @@ public class ItemBuilder {
     }
 
     public ItemStack build() {
+        if (this.leftClick != null || this.rightClick != null || this.middleClick != null) {
+            meta = VersionManager.getAdapter().setPersistentDataContainer(meta, getClickKey(), PersistentDataType.STRING, clickId);
+        }
         item.setItemMeta(meta);
         if (this.leftClick != null || this.rightClick != null || this.middleClick != null) {
-            registered.put(item, new ClickActions(this.leftClick, this.rightClick, this.middleClick));
+            registered.put(clickId, new ClickActions(this.leftClick, this.rightClick, this.middleClick));
         }
         return item;
     }
@@ -154,25 +180,29 @@ public class ItemBuilder {
         @EventHandler
         public void onClick(PlayerInteractEvent e) {
             ItemStack hand = e.getItem();
-            if (hand != null) {
-                for (Map.Entry<ItemStack, ClickActions> entry : ItemBuilder.registered.entrySet()) {
-                    if (ItemBuilder.isSimilar(hand, entry.getKey())) {
-                        ClickActions a = entry.getValue();
-                        switch (e.getAction()) {
-                            case LEFT_CLICK_AIR:
-                            case LEFT_CLICK_BLOCK:
-                                if (a.left != null) {
-                                    a.left.accept(new ClickContext(e.getPlayer(), hand, e));
-                                }
-                                break;
-                            case RIGHT_CLICK_AIR:
-                            case RIGHT_CLICK_BLOCK:
-                                if (a.right != null) {
-                                    a.right.accept(new ClickContext(e.getPlayer(), hand, e));
-                                }
-                                break;
-                            case PHYSICAL:
-                                break;
+            if (hand != null && hand.hasItemMeta()) {
+                ItemMeta meta = hand.getItemMeta();
+                if (meta != null) {
+                    String clickId = VersionManager.getAdapter().getPersistentDataContainer(meta, getClickKey(), PersistentDataType.STRING);
+                    if (clickId != null) {
+                        ClickActions a = ItemBuilder.registered.get(clickId);
+                        if (a != null) {
+                            switch (e.getAction()) {
+                                case LEFT_CLICK_AIR:
+                                case LEFT_CLICK_BLOCK:
+                                    if (a.left != null) {
+                                        a.left.accept(new ClickContext(e.getPlayer(), hand, e));
+                                    }
+                                    break;
+                                case RIGHT_CLICK_AIR:
+                                case RIGHT_CLICK_BLOCK:
+                                    if (a.right != null) {
+                                        a.right.accept(new ClickContext(e.getPlayer(), hand, e));
+                                    }
+                                    break;
+                                case PHYSICAL:
+                                    break;
+                            }
                         }
                     }
                 }

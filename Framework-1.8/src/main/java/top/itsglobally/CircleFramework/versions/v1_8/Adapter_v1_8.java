@@ -28,4 +28,9 @@ public class Adapter_v1_8 implements VersionAdapter {
         return meta;
     }
 
+    @Override
+    public <P, C> C getPersistentDataContainer(ItemMeta meta, NamespacedKey key, PersistentDataType<P, C> type) {
+        return null;
+    }
+
 }

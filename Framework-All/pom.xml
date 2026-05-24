@@ -93,6 +93,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <version>5.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>top.itsglobally</groupId>
             <artifactId>Framework-Core</artifactId>
             <version>1.0-SNAPSHOT</version>

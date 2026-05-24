@@ -11,4 +11,7 @@ public interface VersionAdapter {
                                         NamespacedKey namespacedKey,
                                         PersistentDataType<P, C> persistentDataType,
                                         C id);
+    <P, C> C getPersistentDataContainer(ItemMeta meta,
+                                        NamespacedKey namespacedKey,
+                                        PersistentDataType<P, C> persistentDataType);
 }

@@ -7,6 +7,7 @@ import lombok.Getter;
 import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import top.itsglobally.CircleFramework.command.CommandManager;
@@ -108,6 +109,12 @@ public abstract class BasePlugin<T extends BasePlugin> extends JavaPlugin {
 
         if (missSomething) return missingPlugins;
         return null;
+    }
+
+    protected void registerListener(Listener... listeners)
+    {
+        for (Listener listener : listeners)
+            getServer().getPluginManager().registerEvents(listener,this);
     }
 
 }
