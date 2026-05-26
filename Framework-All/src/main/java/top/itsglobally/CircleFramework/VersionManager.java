@@ -17,8 +17,10 @@ public class VersionManager {
 
         if (version.startsWith("1.8")) {
             adapter = new Adapter_v1_8();
+            Predefiend.getPlugin().getLogger().info("正在使用1.8相容");
         } else if (version.startsWith("1.21")) {
             adapter = new Adapter_v1_21();
+            Predefiend.getPlugin().getLogger().info("正在使用1.21相容");
         } else {
             Predefiend.getPlugin().getLogger().warning("不相容的伺服器! 將停止載入");
             Predefiend.getPlugin().disablePlugin();

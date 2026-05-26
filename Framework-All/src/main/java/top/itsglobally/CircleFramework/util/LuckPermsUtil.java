@@ -2,8 +2,12 @@ package top.itsglobally.CircleFramework.util;
 
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.group.Group;
 import net.luckperms.api.model.user.User;
+import net.luckperms.api.query.QueryOptions;
 import org.bukkit.entity.Player;
+
+import java.util.Comparator;
 
 public class LuckPermsUtil {
     private static final LuckPerms luckPerms = LuckPermsProvider.get();
@@ -23,5 +27,12 @@ public class LuckPermsUtil {
     }
     public static String getColoredName(Player player) {
         return getPrefixColor(player) + player.getName();
+    }
+
+    public static String getHighestGroup(Player player) {
+        User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+        if (user == null) return "";
+
+        return user.getPrimaryGroup();
     }
 }

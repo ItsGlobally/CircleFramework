@@ -4,34 +4,41 @@ import dev.triumphteam.gui.components.GuiAction;
 import dev.triumphteam.gui.guis.GuiItem;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
+import top.itsglobally.CircleFramework.data.Predefiend;
 import top.itsglobally.CircleFramework.VersionManager;
 import top.itsglobally.CircleFramework.annotation.AutoListener;
-import top.itsglobally.CircleFramework.data.Predefiend;
 
 import java.util.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.function.Consumer;
 
 public class ItemBuilder {
 
     private static final Map<String, ClickActions> registered = new HashMap<>();
+    private static final String LEGACY_LORE_PREFIX = ChatColor.BLACK + "[CF]";
     private final ItemStack item;
     private final Material material;
-    private final String clickId = UUID.randomUUID().toString();
+    private String clickId;
     private ItemMeta meta;
     private Consumer<ClickContext> leftClick;
     private Consumer<ClickContext> rightClick;
     private Consumer<ClickContext> middleClick;
+    private Consumer<BreakContext> breakBlock;
+    private Consumer<PlaceContext> placeBlock;
 
     public ItemBuilder(Material material) {
         this.material = material;
@@ -107,8 +114,13 @@ public class ItemBuilder {
         return this;
     }
 
-    public <P, C> ItemBuilder setPersistentDataContainer(NamespacedKey namespacedKey, PersistentDataType<P, C> persistentDataType, C id) {
-        meta = VersionManager.getAdapter().setPersistentDataContainer(meta, namespacedKey, persistentDataType, id);
+    public ItemBuilder setAllowAnvilEnchant(boolean allow) {
+        meta = VersionManager.getAdapter().setAllowAnvilEnchant(meta, allow);
+        return this;
+    }
+
+    public ItemBuilder setPersistentDataContainer(String key, String id) {
+        meta = VersionManager.getAdapter().setPersistentDataContainer(meta, Predefiend.getPlugin(), key, id);
         return this;
     }
 
@@ -124,6 +136,16 @@ public class ItemBuilder {
 
     public ItemBuilder onMiddleClick(Consumer<ClickContext> action) {
         this.middleClick = action;
+        return this;
+    }
+
+    public ItemBuilder onBreakBlock(Consumer<BreakContext> action) {
+        this.breakBlock = action;
+        return this;
+    }
+
+    public ItemBuilder onPlace(Consumer<PlaceContext> action) {
+        this.placeBlock = action;
         return this;
     }
 
@@ -146,8 +168,8 @@ public class ItemBuilder {
         }
     }
 
-    private static NamespacedKey getClickKey() {
-        return new NamespacedKey(Predefiend.getPlugin(), "itembuilder_click_id");
+    private static String getClickKey() {
+        return "itembuilder_click_id";
     }
 
     public GuiItem asGuiItem() {
@@ -161,12 +183,20 @@ public class ItemBuilder {
     }
 
     public ItemStack build() {
-        if (this.leftClick != null || this.rightClick != null || this.middleClick != null) {
-            meta = VersionManager.getAdapter().setPersistentDataContainer(meta, getClickKey(), PersistentDataType.STRING, clickId);
+        if (hasActions()) {
+            if (clickId == null) {
+                clickId = buildStableClickId();
+            }
+            meta = VersionManager.getAdapter().setPersistentDataContainer(meta, Predefiend.getPlugin(), getClickKey(), clickId);
+            if (isLegacyServer()) {
+                List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+                lore.add(LEGACY_LORE_PREFIX + clickId);
+                meta.setLore(lore);
+            }
         }
         item.setItemMeta(meta);
-        if (this.leftClick != null || this.rightClick != null || this.middleClick != null) {
-            registered.put(clickId, new ClickActions(this.leftClick, this.rightClick, this.middleClick));
+        if (hasActions()) {
+            registered.put(clickId, new ClickActions(this.leftClick, this.rightClick, this.middleClick, this.breakBlock, this.placeBlock));
         }
         return item;
     }
@@ -175,15 +205,42 @@ public class ItemBuilder {
 
     }
 
+    public record BreakContext(Player player, ItemStack item, BlockBreakEvent event) {
+
+    }
+
+    public record PlaceContext(Player player, ItemStack item, BlockPlaceEvent event) {
+
+    }
+
     @AutoListener
     public static class ItemListener implements Listener {
-        @EventHandler
+        private String resolveClickId(ItemMeta meta) {
+            if (isLegacyServer()) {
+                if (meta.hasLore()) {
+                    List<String> lore = meta.getLore();
+                    if (lore != null) {
+                        for (int i = lore.size() - 1; i >= 0; i--) {
+                            String line = ChatColor.stripColor(lore.get(i));
+                            if (line != null && line.startsWith("[CF]")) {
+                                return line.substring(4);
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            return VersionManager.getAdapter().getPersistentDataContainer(meta, Predefiend.getPlugin(), getClickKey());
+        }
+
+        @EventHandler(priority = EventPriority.LOWEST)
         public void onClick(PlayerInteractEvent e) {
+            if (e.isCancelled()) return;
             ItemStack hand = e.getItem();
             if (hand != null && hand.hasItemMeta()) {
                 ItemMeta meta = hand.getItemMeta();
                 if (meta != null) {
-                    String clickId = VersionManager.getAdapter().getPersistentDataContainer(meta, getClickKey(), PersistentDataType.STRING);
+                    String clickId = resolveClickId(meta);
                     if (clickId != null) {
                         ClickActions a = ItemBuilder.registered.get(clickId);
                         if (a != null) {
@@ -208,9 +265,90 @@ public class ItemBuilder {
                 }
             }
         }
+
+        @EventHandler(priority = EventPriority.LOWEST)
+        public void onBreak(BlockBreakEvent e) {
+            if (e.isCancelled()) return;
+            ItemStack hand = e.getPlayer().getItemInHand();
+            if (hand != null && hand.hasItemMeta()) {
+                ItemMeta meta = hand.getItemMeta();
+                if (meta != null) {
+                    String clickId = resolveClickId(meta);
+                    if (clickId != null) {
+                        ClickActions a = ItemBuilder.registered.get(clickId);
+                        if (a != null && a.breakBlock != null) {
+                            a.breakBlock.accept(new BreakContext(e.getPlayer(), hand, e));
+                        }
+                    }
+                }
+            }
+        }
+
+        @EventHandler(priority = EventPriority.LOWEST)
+        public void onPlace(BlockPlaceEvent e) {
+            if (e.isCancelled()) return;
+            ItemStack hand = e.getItemInHand();
+            if (hand != null && hand.hasItemMeta()) {
+                ItemMeta meta = hand.getItemMeta();
+                if (meta != null) {
+                    String clickId = resolveClickId(meta);
+                    if (clickId != null) {
+                        ClickActions a = ItemBuilder.registered.get(clickId);
+                        if (a != null && a.placeBlock != null) {
+                            a.placeBlock.accept(new PlaceContext(e.getPlayer(), hand, e));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private record ClickActions(Consumer<ClickContext> left, Consumer<ClickContext> right,
-                                Consumer<ClickContext> middle) {
+                                Consumer<ClickContext> middle, Consumer<BreakContext> breakBlock,
+                                Consumer<PlaceContext> placeBlock) {
+    }
+
+    private boolean hasActions() {
+        return this.leftClick != null
+                || this.rightClick != null
+                || this.middleClick != null
+                || this.breakBlock != null
+                || this.placeBlock != null;
+    }
+
+    private String buildStableClickId() {
+        String raw = material.name() + '|' +
+                meta.getDisplayName() + '|' +
+                meta.getLore() + '|' +
+                String.valueOf(item.getDurability()) + '|' +
+                meta.getEnchants() + '|' +
+                (this.leftClick != null) + '|' +
+                (this.rightClick != null) + '|' +
+                (this.middleClick != null) + '|' +
+                (this.breakBlock != null) + '|' +
+                (this.placeBlock != null);
+        return sha256(raw);
+    }
+
+    private static String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder(hash.length * 2);
+            for (byte b : hash) {
+                String h = Integer.toHexString(b & 0xff);
+                if (h.length() == 1) {
+                    hex.append('0');
+                }
+                hex.append(h);
+            }
+            return hex.toString();
+        } catch (Exception ignored) {
+            return Integer.toHexString(value.hashCode());
+        }
+    }
+
+    private static boolean isLegacyServer() {
+        return org.bukkit.Bukkit.getServer().getBukkitVersion().startsWith("1.8");
     }
 }

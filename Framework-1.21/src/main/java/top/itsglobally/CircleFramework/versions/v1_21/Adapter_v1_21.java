@@ -2,7 +2,7 @@ package top.itsglobally.CircleFramework.versions.v1_21;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.java.JavaPlugin;
 import top.itsglobally.CircleFramework.core.VersionAdapter;
 
 public class Adapter_v1_21 implements VersionAdapter {
@@ -19,13 +19,19 @@ public class Adapter_v1_21 implements VersionAdapter {
     }
 
     @Override
-    public <P, C> ItemMeta setPersistentDataContainer(ItemMeta meta, NamespacedKey namespacedKey, PersistentDataType<P, C> persistentDataType, C id) {
-        meta.getPersistentDataContainer().set(namespacedKey, persistentDataType, id);
+    public ItemMeta setAllowAnvilEnchant(ItemMeta meta, boolean allow) {
+        meta.setEnchantable(allow ? 1 : 0);
         return meta;
     }
 
     @Override
-    public <P, C> C getPersistentDataContainer(ItemMeta meta, NamespacedKey namespacedKey, PersistentDataType<P, C> persistentDataType) {
-        return meta.getPersistentDataContainer().get(namespacedKey, persistentDataType);
+    public ItemMeta setPersistentDataContainer(ItemMeta meta, JavaPlugin plugin, String key, String id) {
+        meta.getPersistentDataContainer().set(new NamespacedKey(plugin, key), org.bukkit.persistence.PersistentDataType.STRING, id);
+        return meta;
+    }
+
+    @Override
+    public String getPersistentDataContainer(ItemMeta meta, JavaPlugin plugin, String key) {
+        return meta.getPersistentDataContainer().get(new NamespacedKey(plugin, key), org.bukkit.persistence.PersistentDataType.STRING);
     }
 }
